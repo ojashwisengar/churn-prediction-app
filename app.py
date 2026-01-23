@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from collections import defaultdict
 
-# Load model and feature list
+# Load model & features
 model = joblib.load("churn_model.pkl")
 features = joblib.load("model_features.pkl")
 
@@ -12,19 +13,38 @@ st.write("Enter customer details to predict churn risk")
 
 input_data = {}
 
-# Split features into numeric & binary (one-hot)
-binary_cols = [c for c in features if "_" in c]
-num_cols = [c for c in features if c not in binary_cols]
+# --------- Identify groups ----------
+groups = defaultdict(list)
+numeric_cols = []
 
+for f in features:
+    if "_" in f:
+        base = f.split("_")[0]
+        groups[base].append(f)
+    else:
+        numeric_cols.append(f)
+
+# --------- Numeric Inputs ----------
 st.subheader("Numeric Inputs")
-for c in num_cols:
-    input_data[c] = st.number_input(c, value=0.0)
+for col in numeric_cols:
+    input_data[col] = st.number_input(col, value=0.0)
 
-st.subheader("Categorical Flags (Select if true)")
-for c in binary_cols:
-    input_data[c] = 1 if st.checkbox(c) else 0
+# --------- Categorical Inputs ----------
+st.subheader("Categorical Inputs")
 
-# Create DataFrame
+for base, cols in groups.items():
+    if len(cols) == 1:
+        # binary flag
+        input_data[cols[0]] = 1 if st.checkbox(cols[0]) else 0
+    else:
+        # multi-class group → radio
+        options = ["None"] + [c.replace(base + "_", "") for c in cols]
+        choice = st.radio(base, options, index=0)
+
+        for c in cols:
+            input_data[c] = 1 if c.endswith(choice) else 0
+
+# --------- Predict ----------
 input_df = pd.DataFrame([input_data])
 
 if st.button("Predict"):
@@ -32,7 +52,6 @@ if st.button("Predict"):
 
     st.subheader(f"Churn Probability: {prob:.2f}")
 
-    # Business threshold = 0.4
     if prob >= 0.4:
         st.error("High risk of churn")
     else:
