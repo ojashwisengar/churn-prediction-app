@@ -23,6 +23,11 @@ for f in features:
         groups[base].append(f)
     else:
         numeric_cols.append(f)
+        
+# -------- Special binary numeric --------
+if "SeniorCitizen" in numeric_cols:
+    numeric_cols.remove("SeniorCitizen")
+    input_data["SeniorCitizen"] = 1 if st.checkbox("SeniorCitizen") else 0
 
 # --------- Numeric Inputs ----------
 st.subheader("Numeric Inputs")
