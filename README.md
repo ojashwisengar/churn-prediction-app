@@ -36,7 +36,7 @@ and more…
 
 Try the live app here:
 
-👉 (Paste your Streamlit link here after deployment)
+https://churn-prediction-app-ojashwi.streamlit.app/
 
 **How to Run Locally**
 
